@@ -6,7 +6,8 @@ A retro newspaper-inspired weather application built for DTC 477: Advanced Web D
 ## 🔗 Live Demo
 
 Check it out here:  
-👉 [https://zt-devlog.github.io/weather-app/](https://zt-devlog.github.io/weather-app/) *(update this URL to match the actual repo name if different)*
+🔗 Repo: [https://github.com/zt-devlog/weather-app](https://github.com/zt-devlog/weather-app)
+
 
 ---
 
