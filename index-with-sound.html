@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Retro Weather Digest</title>
+  <link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,700;1,400&family=Playfair+Display:wght@700&family=IBM+Plex+Mono&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      background-color: #fcf9f3;
+      font-family: 'Spectral', serif;
+      color: #111;
+      margin: 0;
+      padding: 0;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: linear-gradient(120deg, #f5f5f5, #fff0f5, #f0f0f0);
+      background-size: 300% 300%;
+      animation: gradientShift 25s ease infinite;
+      z-index: -1;
+      opacity: 0.9;
+    }
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    .weather-box {
+      max-width: 900px;
+      margin: 2rem auto;
+      padding: 2rem;
+      background: white;
+      box-shadow: 4px 4px 0 #000;
+    }
+    .dateline {
+      font-size: 0.85rem;
+      text-align: center;
+      font-style: italic;
+      color: #444;
+      margin-bottom: 1.5rem;
+    }
+    .section-header {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.6rem;
+      text-transform: uppercase;
+      text-align: center;
+      letter-spacing: 0.05em;
+      border-top: 2px solid black;
+      border-bottom: 1px dashed black;
+      padding: 0.5rem 0;
+      margin: 2rem 0 1rem;
+    }
+    .top-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .field {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-width: 120px;
+    }
+    label {
+      font-size: 0.9rem;
+      margin-bottom: 0.25rem;
+    }
+    input {
+      padding: 0.5rem;
+      font-family: inherit;
+    }
+    button {
+      padding: 0.6rem 1rem;
+      font-family: inherit;
+      cursor: pointer;
+      border: 1px solid #000;
+      background: none;
+      transition: background-color 0.3s, color 0.3s;
+    }
+    button:hover {
+      background-color: #000;
+      color: white;
+    }
+    .news-block {
+      border-top: 2px solid #000;
+      padding: 1rem 0;
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+    .forecast {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 1rem;
+    }
+    .forecast-day {
+      border: 1px dashed #000;
+      padding: 0.75rem;
+      text-align: center;
+    }
+    .forecast-blurb {
+      font-style: italic;
+      font-size: 0.9rem;
+      color: #333;
+      border-top: 1px solid #ccc;
+      margin-top: 2rem;
+      padding-top: 1rem;
+    }
+    .result, .hourly {
+      font-family: 'IBM Plex Mono', monospace;
+      white-space: pre-wrap;
+    }
+    
+    /* Added responsive styles for better mobile experience */
+    @media (max-width: 768px) {
+      .weather-box {
+        margin: 1rem;
+        padding: 1rem;
+      }
+      .section-header {
+        font-size: 1.2rem;
+      }
+      .top-bar {
+        flex-direction: column;
+      }
+      .field {
+        width: 100%;
+      }
+      button {
+        width: 100%;
+        margin-top: 0.5rem;
+      }
+      .hourly {
+        font-size: 0.8rem;
+      }
+    }
+    
+    /* Loading animation */
+    .loading {
+      display: inline-block;
+      position: relative;
+      width: 80px;
+      height: 80px;
+      margin: 0 auto;
+    }
+    .loading div {
+      display: inline-block;
+      position: absolute;
+      left: 8px;
+      width: 16px;
+      background: #000;
+      animation: loading 1.2s cubic-bezier(0, 0.5, 0.5, 1) infinite;
+    }
+    .loading div:nth-child(1) {
+      left: 8px;
+      animation-delay: -0.24s;
+    }
+    .loading div:nth-child(2) {
+      left: 32px;
+      animation-delay: -0.12s;
+    }
+    .loading div:nth-child(3) {
+      left: 56px;
+      animation-delay: 0;
+    }
+    @keyframes loading {
+      0% { top: 8px; height: 64px; }
+      50%, 100% { top: 24px; height: 32px; }
+    }
+    
+    /* Error message styling */
+    .error {
+      color: #721c24;
+      background-color: #f8d7da;
+      border: 1px solid #f5c6cb;
+      padding: 0.75rem 1.25rem;
+      border-radius: 0.25rem;
+      margin-bottom: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <!-- 
+  Project Statement:
+  
+  This Weather Application project demonstrates a comprehensive implementation of API integration
+  with creative user interface design. The development process followed these steps:
+  
+  1. API Research - Explored the OpenWeather API documentation to understand endpoints and data structure
+  2. UI Design - Created a retro newspaper-inspired design concept for displaying weather data
+  3. HTML/CSS Development - Built the structure and styling with responsive design principles
+  4. JavaScript Implementation - Used fetch() to retrieve data from OpenWeather API
+  5. Feature Enhancement - Added geolocation, error handling, loading states, and visual elements
+  
+  Claude assisted with reviewing the code for completeness, suggesting improvements for responsive
+  design, enhancing error handling, and ensuring all project requirements were met. Claude also
+  helped to debug the API integration and refine the UI animations for a better user experience.
+  -->
+
+  <div class="weather-box">
+    <h1 style="text-align:center; font-family: 'Playfair Display', serif; font-size: 2.5rem;">Retro Weather Digest</h1>
+    <div class="dateline" id="current-date">Loading current date...</div>
+
+    <div class="top-bar">
+      <div class="field">
+        <label for="city">City</label>
+        <input type="text" id="city" placeholder="e.g. Portland" />
+      </div>
+      <div class="field">
+        <label for="state">State</label>
+        <input type="text" id="state" placeholder="e.g. OR" />
+      </div>
+      <button onclick="getWeather()">Get Weather</button>
+      <button onclick="getWeatherByGeolocation()">Use My Location</button>
+    </div>
+    
+    <div id="error-container"></div>
+
+    <div class="section-header">⎯ TODAY'S HIGHLIGHT ⎯</div>
+    <div class="news-block result" id="result"></div>
+
+    <div class="section-header">✦ 5-DAY STYLECAST</div>
+    <div class="news-block forecast" id="forecast"></div>
+
+    <div class="section-header">⧉ HOURLY TEMPERATURE INDEX</div>
+    <div class="news-block hourly" id="hourly"></div>
+
+    <div class="forecast-blurb">"Brought to you fresh off the press - by Zoe Thompson DTC 477 2025"</div>
+  </div>
+
+  <script>
+    // OpenWeather API Key - Important: In a production environment, this should be secured
+    const apiKey = "d79ad189f48201a768c591af850c9674";
+    
+    // Update current date and time when the page loads
+    document.addEventListener('DOMContentLoaded', () => {
+      updateDateline();
+      // Check if there's a stored location and load it
+      const savedCity = localStorage.getItem('weatherCity');
+      const savedState = localStorage.getItem('weatherState');
+      if (savedCity && savedState) {
+        document.getElementById('city').value = savedCity;
+        document.getElementById('state').value = savedState;
+        fetchWeather(savedCity, savedState);
+      }
+    });
+    
+    // Update the dateline with current date and time
+    function updateDateline() {
+      const now = new Date();
+      const options = { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit'
+      };
+      const formattedDate = now.toLocaleDateString('en-US', options);
+      document.getElementById('current-date').textContent = formattedDate.replace(',', ' ·') + ' · United States Edition';
+    }
+
+    // Type writing effect for results
+    function typeWrite(el, text) {
+      el.textContent = "";
+      let i = 0;
+      const interval = setInterval(() => {
+        el.textContent += text.charAt(i);
+        i++;
+        if (i >= text.length) clearInterval(interval);
+      }, 15);
+    }
+
+    // Display error message
+    function showError(message) {
+      const errorContainer = document.getElementById('error-container');
+      errorContainer.innerHTML = `<div class="error">${message}</div>`;
+      
+      // Auto-hide error after 5 seconds
+      setTimeout(() => {
+        errorContainer.innerHTML = '';
+      }, 5000);
+    }
+    
+    // Show loading indicator
+    function showLoading(elementId) {
+      const element = document.getElementById(elementId);
+      element.innerHTML = '<div class="loading"><div></div><div></div><div></div></div>';
+    }
+
+    // Get weather based on user input
+    async function getWeather() {
+      const city = document.getElementById("city").value.trim();
+      const state = document.getElementById("state").value.trim();
+      
+      if (!city) {
+        showError("Please enter a city name.");
+        return;
+      }
+      
+      // Store location in localStorage for future visits
+      localStorage.setItem('weatherCity', city);
+      localStorage.setItem('weatherState', state);
+      
+      fetchWeather(city, state);
+    }
+
+    // Get weather based on geolocation
+    async function getWeatherByGeolocation() {
+      if (!navigator.geolocation) {
+        showError("Geolocation is not supported by your browser.");
+        return;
+      }
+      
+      showLoading('result');
+      
+      navigator.geolocation.getCurrentPosition(async position => {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+
+        try {
+          // Use reverse geocoding to get city and state from coordinates
+          const locationRes = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`);
+          const locationData = await locationRes.json();
+          
+          const city = locationData.city || locationData.locality || locationData.principalSubdivision || "Unknown City";
+          const state = locationData.principalSubdivisionCode?.split("-")[1] || "";
+          
+          // Update input fields with detected location
+          document.getElementById('city').value = city;
+          document.getElementById('state').value = state;
+          
+          // Store location in localStorage
+          localStorage.setItem('weatherCity', city);
+          localStorage.setItem('weatherState', state);
+          
+          fetchWeather(city, state);
+        } catch (err) {
+          showError("Could not determine your location. Please enter city and state manually.");
+          document.getElementById("result").textContent = "";
+          console.error("Reverse geocode error:", err);
+        }
+      }, error => {
+        // Handle geolocation errors
+        let errorMessage = "Unable to retrieve your location. ";
+        
+        switch(error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage += "You denied the request for geolocation.";
+            break;
+          case error.POSITION_UNAVAILABLE:
+            errorMessage += "Location information is unavailable.";
+            break;
+          case error.TIMEOUT:
+            errorMessage += "The request to get location timed out.";
+            break;
+          default:
+            errorMessage += "An unknown error occurred.";
+            break;
+        }
+        
+        showError(errorMessage);
+        document.getElementById("result").textContent = "";
+      });
+    }
+
+    // Main function to fetch weather data
+    async function fetchWeather(city, state = "") {
+      const query = state ? `${city},${state},US` : `${city},US`;
+      const result = document.getElementById("result");
+      const forecast = document.getElementById("forecast");
+      const hourly = document.getElementById("hourly");
+      
+      // Show loading indicators
+      showLoading('result');
+      forecast.innerHTML = "";
+      hourly.textContent = "";
+
+      try {
+        // Fetch current weather data
+        const weatherRes = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${query}&appid=${apiKey}&units=imperial`);
+        const weatherData = await weatherRes.json();
+
+        if (!weatherData || weatherData.cod !== 200) {
+          showError("Could not find weather data for this location. Please check the city and state names.");
+          result.textContent = "";
+          return;
+        }
+
+        // Format and display current weather
+        const output = `${weatherData.name.toUpperCase()} — TEMP: ${Math.round(weatherData.main.temp)}°F — ${weatherData.weather[0].description.toUpperCase()}`;
+        typeWrite(result, output);
+
+        // Fetch 5-day forecast data
+        const forecastRes = await fetch(`https://api.openweathermap.org/data/2.5/forecast?q=${query}&appid=${apiKey}&units=imperial`);
+        const forecastData = await forecastRes.json();
+        
+        // Filter for mid-day forecasts
+        const daily = forecastData.list.filter(f => f.dt_txt.includes("12:00:00"));
+
+        // Weather icon mapping
+        const iconMap = {
+          Clear: '☀️', Clouds: '☁️', Rain: '🌧️', Snow: '❄️', Thunderstorm: '⚡',
+          Drizzle: '🌦️', Mist: '🌫️', Fog: '🌫️', Smoke: '💨', Haze: '🌁', Dust: '🌪️', Default: '❔'
+        };
+
+        // Generate 5-day forecast display
+        daily.slice(0, 5).forEach(day => {
+          const date = new Date(day.dt * 1000);
+          const icon = iconMap[day.weather[0].main] || iconMap.Default;
+          forecast.innerHTML += `
+            <div class="forecast-day">
+              <h4>${date.toLocaleDateString(undefined, { weekday: "short" })}</h4>
+              <div style="font-size: 1.5rem;">${icon}</div>
+              <p>${Math.round(day.main.temp)}°F</p>
+              <small>${day.weather[0].description}</small>
+            </div>`;
+        });
+
+        // Generate hourly temperature graph
+        const hourlyData = forecastData.list.slice(0, 12);
+        const temps = hourlyData.map(h => h.main.temp);
+        const maxTemp = Math.max(...temps);
+        const minTemp = Math.min(...temps);
+        let graph = "ASCII TEMP GRAPH — NEXT 12 HOURS\n(█ = warmer)\n\n";
+
+        hourlyData.forEach(hour => {
+          const time = new Date(hour.dt * 1000).toLocaleTimeString([], { hour: 'numeric' });
+          const temp = Math.round(hour.main.temp);
+          
+          // Calculate bar length proportionally
+          let count = Math.floor(((temp - minTemp) / Math.max(maxTemp - minTemp, 1)) * 20);
+          count = Math.max(1, count); // Ensure at least one block
+          const blocks = "█".repeat(count);
+          
+          // Add row to graph
+          graph += `${time.padStart(5)} ${blocks.padEnd(20)} ${temp}°F\n`;
+        });
+        hourly.textContent = graph;
+
+      } catch (error) {
+        console.error("Weather fetch error:", error);
+        showError("Error fetching weather data. Please try again later.");
+        result.textContent = "";
+      }
+    }
+    
+    // Update time every minute
+    setInterval(updateDateline, 60000);
+  </script>
+</body>
+</html>
